@@ -6,7 +6,7 @@
 # TEC-maps and EOPs, and runs TECOR and EOP corrections, runs manual         #
 # phase-cal, finge-fit on geo-sources, writes out files for fitting          #
 #                                                                            #
-# Version 2.3.0 (2016/03/22)                                                 #
+# Version 3.0.0 (2020/11/12)                                                 #
 #                                                                            #
 # Changes:                                                                   #
 #                                                                            #
@@ -18,14 +18,39 @@
 # 2.1.0: Added plot_tables, new options and experimental self-cal            #
 # 2.2.0: Added AIPSVER, niter, get_key_flag, first epoch products            #
 # 2.3.0: Added RDBE_check                                                    #
+# 3.0.0: SDW Major changes to use argparse !
 #                                                                            #
 ##############################################################################
 
 from AIPS import AIPS
 import os
+import argparse
 
-def_file    = '/path/to/definitions_spirals.py'
-aipsver     = '31DEC16'
+parser = argparse.ArgumentParser()
+parser.add_argument("exp_code",help="Experiment Code, ie s005b")
+parser.add_argument("aips_userno",help="AIPS User Number")
+args = parser.parse_args()
+
+
+AIPS.userno = int(args.aips_userno)
+EXPERIMENT  = args.exp_code.upper()
+
+# Default take from ?? 
+def_file    = '/raid5/home/oper/analysis/fit/definitions_spirals.py'
+
+# Can get this from environment variable AIPS_VERSION
+AIPSVER=os.getenv('AIPS_VERSION')
+
+if "AIPS_VERSION" in os.environ:
+   print "AIPS_VERSION : ",AIPSVER
+else:
+   print "Environment vaariable AIPS_VERSION does not exist"
+   exit()
+
+t_aipsver=AIPSVER.rpartition('/')
+aipsver=t_aipsver[2]
+#aipsver     = '31DEC19'
+print "AIPS_VERSION : ",aipsver
 
 
 ####################
@@ -34,16 +59,35 @@ aipsver     = '31DEC16'
 
 logfile     = 'ParselTongue.log'
 
-file_path   = '/path/to/analysis/directory/files/'
-eop_path    = '/path/to/analysis/directory/eop/'
-fit_path    = '/path/to/analysis/directory/fit/'
-
-AIPS.userno = 420
+# First part of path take from pwd ! 
+file_path   = '/raid5/home/oper/analysis/'+args.exp_code+'/files/'
+eop_path    = '/raid5/home/oper/analysis/'+args.exp_code+'/eop/'
+fit_path    = '/raid5/home/oper/analysis/fit/'
 
 inter_flag  = 0        # interactive (1) or non-interactive (0) mode
 n           = 3         # Number of UV-data files either to download, on disk
                         # or already in AIPS and to be analyzed
 defdisk     = 1         # Default AIPS disk to use (can be changed later)
+
+print "**********************************************************"
+print ""
+print "Job Setup"
+print ""
+print "Experiment      : ",EXPERIMENT
+print "AIPS User No    : ",args.aips_userno
+print "AIPS Version    : ",aipsver
+print "Definition File : ",def_file
+print "file path       : ",file_path
+print "eop path        : ",eop_path
+print "fit path        : ",fit_path
+
+#
+# Print out the above and ask the user to confirm the input is correct before continuing
+print ""
+raw_input("Is the above setup correct ? If it is Press Any Key to continue ...")
+
+
+
 
 #############################################################################
 ###                  Do not change or move this part                     ####
@@ -139,17 +183,17 @@ dofit      = [[0], [0], [0],[0]]
 ###############
 
 filename[0] = ''
-outname[0]  = 'epoch_G'
+outname[0]  = EXPERIMENT+'_G'
 outclass[0] = 'UVDATA'
 outdisk[0]  = 1
 
 filename[1] = ''
-outname[1]  = 'epoch_C'
+outname[1]  = EXPERIMENT+'_C'
 outclass[1] = 'UVDATA'
 outdisk[1]  = 1
 
 filename[2] = ''
-outname[2]  = 'epoch_L'
+outname[2]  = EXPERIMENT+'_L'
 outclass[2] = 'UVDATA'
 outdisk[2]  = 1
 
@@ -165,11 +209,11 @@ get_key_flag    = 0        # Download key-file from archive
 # geoblock analysis #
 #####################
 RDBE_check      = 0      # Check Geoblock data for RDBE errors?
-geo_prep_flag   = 0      # Run TECOR and EOP corrections?xs
-geo_fringe_flag = 0      # Fringe fit the data?
-doprt_flag      = 0      # Print out files for fitting?
-dofit_flag      = 0      # Start geoblock fitting?
-doplot_flag     = 0      # Plot fit_geoblock output?
+geo_prep_flag   = 1      # Run TECOR and EOP corrections?xs
+geo_fringe_flag = 1      # Fringe fit the data?
+doprt_flag      = 1      # Print out files for fitting?
+dofit_flag      = 1      # Start geoblock fitting?
+doplot_flag     = 1      # Plot fit_geoblock output?
 
 #####################
 # phaseref analysis #
