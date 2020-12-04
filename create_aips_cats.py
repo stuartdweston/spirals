@@ -1,11 +1,18 @@
 #!/usr/local/bin/parseltongue
-
+#
+#version 3.0 2020/11/12
 #version 2.0 2019/01/29
 #
 #2.0 takes into account "blank" source input for all
+#
+#3.0 We need to also load the geo file !
+#    Also lets have some paramter parsing and make it more flexible
+#    So use "argparse"
+#    S. Weston AUT
 
 import sys, os, pdb
 import numpy as np
+import argparse
 from AIPS import AIPS
 from AIPSTask import AIPSTask, AIPSList
 from AIPSData import AIPSUVData, AIPSImage
@@ -16,25 +23,73 @@ import scipy.io as sio
 ###################################################
 
 def main():
-    dogeo  = 1
-    docont = 1
-    doline = 1
 
-    AIPS.userno = 280+13+1
-    EXPERIMENT  = "S001D"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("exp_code",help="Experiment Code, ie s005b")
+    parser.add_argument("aips_userno",help="AIPS User Number")
+    parser.add_argument("-docont",help="docont=1",action='store_true')
+    parser.add_argument("-doline",help="doline=1",action='store_true')
+    parser.add_argument("-dogeo",help="dogeo=1",action='store_true')
+    args = parser.parse_args()
+
+
+    AIPS.userno = int(args.aips_userno) 
+    EXPERIMENT  = args.exp_code.upper()
     EXPCLASS    = "UVDATA"
     EXPSEQ      = 1
     EXPDISK     = 1
-    file_path   = "/home/observer/analysis/s001d/files/"
+    file_path   = "/raid5/home/oper/analysis/"+args.exp_code+"/files/"
+    print "**********************************************************"
+    print ""
+    print "Job Setup"
+    print ""
+    print "Experiment     : ",EXPERIMENT
+    print "AIPS User No   : ",args.aips_userno
+    print "File Path      : ",file_path
 
-    n = 2 #number of files
+    print "Options defined:"
+    if args.docont:
+       docont=1
+       print "  docont"
+    else:
+       docont=0
+
+    if args.doline:
+       doline=1
+       print "  doline"
+    else:
+       doline=0
+
+    if args.dogeo:
+       dogeo=1
+       print "  dogeo"
+    else:
+       dogeo=0
+
+    EXPCLASS    = "UVDATA"
+    EXPSEQ      = 1
+    EXPDISK     = 1
+    file_path   = "/raid5/home/oper/analysis/"+args.exp_code+"/files/"
+
+    n = 3 #number of files
     #                     name         : spectral resolution fine=0.9766kHz, coarse=500kHz
-    file_catalogue =   {'s001d-cont'  : 'coarse',
-    	                's001d-line'  : 'fine'}
+    file_catalogue =   {args.exp_code+'-cont'  : 'coarse',
+                        args.exp_code+'-line'  : 'fine',
+                        args.exp_code+'-geo'   : 'geo'}
 
-    data_names     =   {'s001d-cont'  : 's001d_lowres.fits',
-                        's001d-line'  : 's001d_hires.fits'}
+    data_names     =   {args.exp_code+'-cont'  : args.exp_code+'-cont.fits',
+                        args.exp_code+'-line'  : args.exp_code+'-line.fits',
+                        args.exp_code+'-geo'   : args.exp_code+'-geo.fits'}
     #
+
+    print "File Catalogue : ",file_catalogue
+    print "Data Names     : ",data_names
+
+    #
+    # Print out the above and ask the user to confirm the input is correct before continuing
+    print ""
+    raw_input("Is the above setup correct ? If it is Press Any Key to continue ...")
+
     target_source       = [] #['G232.62-0.99']                  #masers/target             [] => ALL G*/J*
     target_calibrators  = [] #['J1725','J729','J1735','J1748']  #phasereference quasars    [] => ALL G*/J*
     correlation_key     = 'fine'   # correlation type to source from for spectra (ONLY RELEVANT FOR LINE DATA)
@@ -59,7 +114,7 @@ def main():
         print 'CREATING GEO FILE'
         for name in file_names:
             correlation_type=file_catalogue[name]
-            if not correlation_type=='coarse':
+            if not correlation_type=='geo':
                 print name+' incorrect spectral type'
                 continue
             else:
