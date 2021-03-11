@@ -59,7 +59,12 @@ antname     = 'LBA'                 # Antenna order for FITLD
 refant      = 1                     # {1: 'CD', 2: 'HO', 3: 'KE', 4: 'YG'} if AUS, {1:'AT',2:'CD',3:'HO',4:'MP',5:'PA',6:'WA'}
 calsource   = ['maser','quasar1','quasar2'][0]  # calibrator        '' => automatically
 target      = ['']                              # continuum sources '' => automatically
-mp_source   = ['manualFF']            # fringe finder     '' => automatically
+#
+# replace "manualFF" in your SPirals_control*.py with either a source name as it is in AIPS,
+# or leave it blank and the script will figure out the best source.
+#mp_source   = ['manualFF']            # fringe finder     '' => automatically
+mp_source   = ['']            # fringe finder     '' => automatically
+
 mp_timera   = [0,0,0,0,0,0,0,0]       #[0,0,0,0,0,0,0,0]  # constrain time range for fringe finder?
 bandcal     = ['']                    # Bandpass calibrator
 
